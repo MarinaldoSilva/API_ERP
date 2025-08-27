@@ -55,6 +55,7 @@ class Authentication:
 
         create_user = User.objects.create(
             name = name,
+            username = email,#isso garante que o username sera unico, se não for assi vai ser salvo uma string vazia no banco, e vai dar erro.
             email = email,
             password = password_hash,
             is_owner = 0 if type_account == 'employee' else 1 

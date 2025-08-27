@@ -5,19 +5,14 @@ from companies.models import Enterprise
 
 class User(AbstractUser):
     #id_user
-    nome = models.CharField(max_length=150)
+    name = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
     is_owner = models.BooleanField(default=True)
-
-    #USERNAME_FIELD = 'email'
-    
-    def __str__(self):
-        return f"User: {self.nome} -> {self.email}"
-    
+        
 #Departamentos 
 class Group(models.Model):
     #id_grupo
-    nome = models.CharField(max_length=85)
+    name = models.CharField(max_length=85)
     enterprise = models.ForeignKey(Enterprise, on_delete=models.CASCADE)
 
 #permissão Departamentos 

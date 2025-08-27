@@ -1,15 +1,24 @@
 from rest_framework.views import APIView
-from companies.models import Enterprise
+from companies.models import Enterprise, Employee
 
 class Base(APIView):
-    #dicionario dos dados onde por padrão não é dono da empresa e não tem permissões
+
     def get_enterprise_user(self, user_id):
         enterprise = {
             "is_owner": False,
+            "is_employee": False,
             "permissions": []
         }
 
-        """verifica se o user é dono de alguma empresa, e a atribuição é automatica, pois com o exist() retorna um booleano"""
-        enterprise["is_owner"] = Enterprise.objects.filter(user_id = user_id).exists()
+        is_owner = Enterprise.objects.filter(user_id=user_id).exists()
 
-        if enterprise['is_owner']: return enterprise
+        if is_owner: 
+            enterprise['is_owner'] = is_owner 
+            enterprise['permissions'] = ['is_owner']
+        else:
+            employee = Employee.objects.filter(user_id = user_id).exists()
+            if employee:
+                enterprise['is_employee'] = employee
+                enterprise['permissions'] = ['employee']
+
+        return enterprise
