@@ -18,7 +18,7 @@ class Authentication:
         if not all([name, email, password]):
             raise APIException("Nome, email e senha são obrigatórios, verifique os campos e tente novamente.")
         
-        #todo funcionario tem que ter uma empresa onde vai trabalhar
+        """todo funcionario tem que ter uma empresa onde vai trabalhar"""
         if type_account == 'employee' and not company_id:
             raise APIException("O ID da empresa é obrigatório para funcionários.")
 
@@ -27,7 +27,7 @@ class Authentication:
         if user_exists:
             raise APIException("Já existe um usuário cadastrado com este email.")
 
-        #usamos um create_user para criar usuários, e o create para os demaias
+        """usamos um create_user para criar usuários, e o create para os demaias"""
         create_user = User.objects.create_user(
             name = name,
             username = email,
@@ -38,14 +38,14 @@ class Authentication:
             is_owner = (type_account=='owner')#retorna um booleano
         )
 
-        #criando empresa para o dono
+        """criando empresa para o dono"""
         if type_account == 'owner':
             empresa = Enterprise.objects.create(
                 name = "Nome da empresa",
                 user_id = create_user.id
             )
         
-        #criando funcionario para a empresa
+        """criando funcionario para a empresa"""
         if type_account == 'employee':
            employee = Employee.objects.create(
                 empresa_id = company_id,
