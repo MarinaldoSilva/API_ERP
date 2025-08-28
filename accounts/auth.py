@@ -1,47 +1,23 @@
-#verificar as exessões possiveis de autenticação e APIs
 from rest_framework.exceptions import AuthenticationFailed, APIException
-#pegar os models de Usuário e empresa
-from accounts.models import User
+from django.contrib.auth import authenticate, get_user_model
 from companies.models import Enterprise, Employee
-#criptorgrafia de senha: verificar senha e criar senha 
-from django.contrib.auth.hashers import check_password, make_password
 
-"""
-vai ter dois metodos singin e signup:1º Entrar -> verifica se o email existe e se a senha é a do email encontrado
-2º Cadastrar -> :ver se o email não existe, qual tipo de conta(dono de empresa(vai ter que ter uma empresa para ser dono), funcionario)
-"""
+User = get_user_model()
 
 class Authentication:
-    def singin(self, email, password):
-        
-        exception = AuthenticationFailed("Email e/ou senha não encontrado")
 
-        #verifica se o email passado no param existe e retorna um boolean, 
-        #caso seja False, cai na exception
-        user_exists = User.objects.filter(email=email).exists()
-    
-        if not user_exists: 
-            raise exception
-        
-        #todos os dados do usuario que tem o email passado no param estão aqui, caso exista é claro.
-        user = User.objects.filter(email=email).first()
-        #verifica se a senha passada no param é igual a senha do usuario que tem o email passado no param
-        #user.password é a senha criptografada no banco, é feita a comparação dos hashes
-        if not check_password(password, user.password): 
-            raise exception
-        
-        return user
+    def singin(self, email, password):        
+        user = authenticate(username = email, password=password)
 
-    #função de cadastro
-    def signup(self, name, email, password, type_account = 'owner', company_id=False):
-        if not name or name == '':#ver se foi deixado em branco ou está vazio
-            raise APIException("O nome é obrigatório.")
-        if not email or email == '':
-            raise APIException("O email é obrigatório.")
-        if not password or password == '':
-            raise APIException("A senha é obrigatória.")
+        if not user: 
+            raise AuthenticationFailed("Email e/ou senha não encontrado")
+        return user   
+
+    def signup(self, name, email, password, type_account = 'owner', company_id=False):     
+
+        if not all([name, email, password]):
+            raise APIException("Nome, email e senha são obrigatórios, verifique os campos e tente novamente.")
         
-        #employee = funcionario, owner = dono da empresa
         #todo funcionario tem que ter uma empresa onde vai trabalhar
         if type_account == 'employee' and not company_id:
             raise APIException("O ID da empresa é obrigatório para funcionários.")
@@ -51,14 +27,15 @@ class Authentication:
         if user_exists:
             raise APIException("Já existe um usuário cadastrado com este email.")
 
-        password_hash = make_password(password)
-
-        create_user = User.objects.create(
+        #usamos um create_user para criar usuários, e o create para os demaias
+        create_user = User.objects.create_user(
             name = name,
-            username = email,#isso garante que o username sera unico, se não for assi vai ser salvo uma string vazia no banco, e vai dar erro.
+            username = email,
+            #isso garante que o username sera unico, se não for assi vai ser salvo uma string vazia no banco, e vai dar erro
             email = email,
-            password = password_hash,
-            is_owner = 0 if type_account == 'employee' else 1 
+            password = password,
+            #is_owner = 0 if type_account == 'employee' else 1 
+            is_owner = (type_account=='owner')#retorna um booleano
         )
 
         #criando empresa para o dono
@@ -71,7 +48,7 @@ class Authentication:
         #criando funcionario para a empresa
         if type_account == 'employee':
            employee = Employee.objects.create(
-                empresa_id = empresa.id,
+                empresa_id = company_id,
                 user_id = create_user.id
            )
         
