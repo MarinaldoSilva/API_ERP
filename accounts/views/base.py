@@ -1,9 +1,8 @@
-from rest_framework.views import APIView
 from companies.models import Enterprise, Employee
 
-class Base(APIView):
-
+class Base:
     def get_enterprise_user(self, user_id):
+        
         enterprise = {
             "is_owner": False,
             "is_employee": False,
